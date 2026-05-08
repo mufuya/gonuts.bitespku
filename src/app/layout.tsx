@@ -36,6 +36,11 @@ export const metadata: Metadata = {
     locale: "id_ID",
     type: "website",
   },
+  icons: {
+    icon: "/logo-clean.svg",
+    shortcut: "/logo-clean.svg",
+    apple: "/logo-clean.svg",
+  },
 };
 
 export default function RootLayout({
