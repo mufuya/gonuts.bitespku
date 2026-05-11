@@ -127,16 +127,16 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* Floating tag cards */}
-              <div className="absolute -bottom-4 -left-4 glass-card rounded-2xl px-4 py-3 shadow-lg">
+              {/* Floating tag cards — inside image on mobile, overhanging on sm+ */}
+              <div className="absolute bottom-3 left-3 sm:-bottom-4 sm:-left-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
                 <p className="text-xs text-[#888] font-medium">Mulai dari</p>
-                <p className="font-black text-[var(--color-leaf)] text-lg">
+                <p className="font-black text-[var(--color-leaf)] text-base sm:text-lg">
                   Rp12.000
                 </p>
               </div>
-              <div className="absolute -top-4 -right-4 glass-card rounded-2xl px-4 py-3 shadow-lg">
-                <p className="text-sm font-bold text-[#1a1a1a] flex items-center gap-1">
-                  <LeafyGreen className="w-4 h-4 text-[var(--color-leaf)]" strokeWidth={2} /> No Pengawet</p>
+              <div className="absolute top-3 right-3 sm:-top-4 sm:-right-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
+                <p className="text-xs sm:text-sm font-bold text-[#1a1a1a] flex items-center gap-1">
+                  <LeafyGreen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-leaf)]" strokeWidth={2} /> No Pengawet</p>
                 <p className="text-xs text-[#888]">Segar setiap hari</p>
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function HomePage() {
           ============================================= */}
       <section
         id="brand-story-section"
-        className="py-20 sm:py-28 bg-white"
+        className="py-20 sm:py-28 bg-white overflow-hidden"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">

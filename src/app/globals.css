@@ -38,6 +38,7 @@
 html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden; /* prevent decorative blobs from causing horizontal scroll */
 }
 
 body {
@@ -45,6 +46,8 @@ body {
   color: #1a1a1a;
   font-family: var(--font-sans);
   line-height: 1.6;
+  overflow-x: hidden; /* belt-and-suspenders: block horizontal scroll at body level too */
+  min-width: 0;
 }
 
 /* =============================================

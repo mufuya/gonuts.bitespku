@@ -30,7 +30,7 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 overflow-hidden ${
         scrolled
           ? "glass-card shadow-sm py-3"
           : "bg-transparent py-5"
@@ -52,7 +52,7 @@ export default function Navbar() {
               priority
             />
           </div>
-          <span className="font-black text-xl tracking-tight text-[#1a1a1a]">
+          <span className="hidden sm:inline font-black text-xl tracking-tight text-[#1a1a1a]">
             GoNuts<span className="text-gradient-leaf"> Bites</span>
           </span>
         </Link>
