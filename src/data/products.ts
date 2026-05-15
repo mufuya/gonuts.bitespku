@@ -44,6 +44,7 @@ export type Product = {
   sauceVariants: SauceVariant[];
   tags: string[];
   isAvailable: boolean;
+  image: string;
 };
 
 export const SAUCE_VARIANTS: SauceVariant[] = [
@@ -102,6 +103,7 @@ export const PRODUCTS: Product[] = [
     sauceVariants: SAUCE_VARIANTS,
     tags: ["healthy", "vegan-friendly", "fresh", "no-preservatives"],
     isAvailable: true,
+    image: "/hero-product-4.png",
   },
 ];
 

@@ -66,11 +66,11 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
       // ── Step 1: Temukan Medusa variant ID ──
       const variantId = product?.allMedusaVariants?.length && product?.medusaOptions
         ? findVariantId(
-            product.allMedusaVariants,
-            product.medusaOptions,
-            selectedPortion.label,
-            selectedSauce.label
-          )
+          product.allMedusaVariants,
+          product.medusaOptions,
+          selectedPortion.label,
+          selectedSauce.label
+        )
         : null;
 
       // ── Step 2: Buat Cart di Medusa ──
@@ -116,14 +116,14 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
   return (
     <div
       id="order-form"
-      className="glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-[var(--color-leaf)]/10"
+      className="glass-card rounded-3xl p-6 sm:p-8 space-y-6 border border-[var(--color-leaf)]/10 bg-[#ffffff]"
     >
       <div>
         <h3 className="font-bold text-lg text-[#1a1a1a] mb-1">
-          Pilih Pesananmu
+          Pesan Sekarang!
         </h3>
         <p className="text-sm text-[#666]">
-          Customise porsi dan saus sesuai selera, lalu langsung pesan via
+          Pilih varian porsi dan saus sesuai selera, dan pesan sekarang via
           WhatsApp!
         </p>
       </div>
@@ -141,25 +141,22 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
                 key={portion.id}
                 id={`portion-option-${portion.id}`}
                 onClick={() => setSelectedPortion(portion)}
-                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
-                    : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
-                }`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${isSelected
+                  ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
+                  : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
+                  }`}
               >
                 <p
-                  className={`font-bold text-lg ${
-                    isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
-                  }`}
+                  className={`font-bold text-lg ${isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
+                    }`}
                 >
                   {portion.label}
                 </p>
                 <p
-                  className={`text-sm font-semibold mt-0.5 ${
-                    isSelected
-                      ? "text-[var(--color-turmeric)]"
-                      : "text-[#666]"
-                  }`}
+                  className={`text-sm font-semibold mt-0.5 ${isSelected
+                    ? "text-[var(--color-turmeric)]"
+                    : "text-[#666]"
+                    }`}
                 >
                   {portion.priceFormatted}
                 </p>
@@ -182,16 +179,14 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
                 key={sauce.id}
                 id={`sauce-option-${sauce.id}`}
                 onClick={() => setSelectedSauce(sauce)}
-                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
-                    : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
-                }`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${isSelected
+                  ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
+                  : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
+                  }`}
               >
                 <p
-                  className={`font-bold text-sm mt-1 ${
-                    isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
-                  }`}
+                  className={`font-bold text-sm mt-1 ${isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
+                    }`}
                 >
                   {sauce.label}
                 </p>
@@ -231,9 +226,8 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
         onClick={handleOrder}
         disabled={isSubmitting}
         id="order-whatsapp-cta"
-        className={`btn-primary btn-whatsapp w-full text-base py-4 relative overflow-hidden ${
-          isSubmitting ? "opacity-80 cursor-not-allowed" : ""
-        }`}
+        className={`btn-primary btn-whatsapp w-full text-base py-4 relative overflow-hidden ${isSubmitting ? "opacity-80 cursor-not-allowed" : ""
+          }`}
       >
         {isSubmitting ? (
           <>

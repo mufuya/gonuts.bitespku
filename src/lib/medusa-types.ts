@@ -55,6 +55,8 @@ export type MedusaProduct = {
   id: string;
   title: string;
   handle: string;
+  thumbnail: string | null;
+  images?: Array<{ id: string; url: string }> | null;
   description: string | null;
   options: MedusaOption[];
   variants: MedusaVariant[];
@@ -116,10 +118,10 @@ function formatIdr(amount: number): string {
 // ---- Main mapper: Medusa product → MappedProduct ----
 
 export function mapMedusaProduct(medusaProduct: MedusaProduct): MappedProduct {
-  const porsiOption = medusaProduct.options.find(
+  const porsiOption = medusaProduct.options?.find(
     (o) => o.title.toLowerCase() === "porsi"
   );
-  const pedasOption = medusaProduct.options.find(
+  const pedasOption = medusaProduct.options?.find(
     (o) =>
       o.title.toLowerCase() === "saus" ||
       o.title.toLowerCase() === "level pedas"
@@ -127,10 +129,10 @@ export function mapMedusaProduct(medusaProduct: MedusaProduct): MappedProduct {
 
   // Build portionVariants from unique Porsi values
   const portionVariants: MappedVariant[] = [];
-  if (porsiOption) {
+  if (porsiOption && medusaProduct.variants) {
     const seenPorsi = new Set<string>();
     for (const variant of medusaProduct.variants) {
-      const porsiVal = variant.options.find(
+      const porsiVal = variant.options?.find(
         (o) => o.option_id === porsiOption.id
       )?.value;
       if (!porsiVal || seenPorsi.has(porsiVal)) continue;
@@ -170,19 +172,29 @@ export function mapMedusaProduct(medusaProduct: MedusaProduct): MappedProduct {
   let shortDescription = PRODUCTS[0].shortDescription;
 
   if (medusaProduct.metadata) {
-    try {
-      if (medusaProduct.metadata.ingredients)
-        ingredients = JSON.parse(medusaProduct.metadata.ingredients);
-      if (medusaProduct.metadata.packaging)
-        packaging = medusaProduct.metadata.packaging;
-      if (medusaProduct.metadata.tags)
-        tags = JSON.parse(medusaProduct.metadata.tags);
-      if (medusaProduct.metadata.longDescription)
-        longDescription = medusaProduct.metadata.longDescription;
-      if (medusaProduct.metadata.shortDescription)
-        shortDescription = medusaProduct.metadata.shortDescription;
-    } catch {
-      // silently use defaults on parse error
+    if (medusaProduct.metadata.packaging)
+      packaging = String(medusaProduct.metadata.packaging);
+    if (medusaProduct.metadata.longDescription)
+      longDescription = String(medusaProduct.metadata.longDescription);
+    if (medusaProduct.metadata.shortDescription)
+      shortDescription = String(medusaProduct.metadata.shortDescription);
+
+    if (medusaProduct.metadata.ingredients) {
+      try {
+        const parsed = JSON.parse(medusaProduct.metadata.ingredients);
+        if (Array.isArray(parsed)) ingredients = parsed.map(String);
+      } catch {
+        ingredients = String(medusaProduct.metadata.ingredients).split(",").map(s => s.trim()).filter(Boolean);
+      }
+    }
+
+    if (medusaProduct.metadata.tags) {
+      try {
+        const parsed = JSON.parse(medusaProduct.metadata.tags);
+        if (Array.isArray(parsed)) tags = parsed.map(String);
+      } catch {
+        tags = String(medusaProduct.metadata.tags).split(",").map(s => s.trim()).filter(Boolean);
+      }
     }
   }
 
@@ -197,9 +209,10 @@ export function mapMedusaProduct(medusaProduct: MedusaProduct): MappedProduct {
     sauceVariants: sauceVariants.length > 0 ? sauceVariants : SAUCE_VARIANTS,
     tags,
     isAvailable: true,
+    image: medusaProduct.thumbnail || PRODUCTS[0].image,
     medusaProductId: medusaProduct.id,
-    medusaOptions: medusaProduct.options,
-    allMedusaVariants: medusaProduct.variants,
+    medusaOptions: medusaProduct.options || [],
+    allMedusaVariants: medusaProduct.variants || [],
   };
 }
 

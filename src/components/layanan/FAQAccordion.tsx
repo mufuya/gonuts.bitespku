@@ -20,10 +20,10 @@ export default function FAQAccordion({ faqItems }: FAQAccordionProps) {
           <div
             key={item.id}
             id={item.id}
-            className={`glass-card rounded-2xl overflow-hidden transition-all duration-200 ${
+            className={`bg-white rounded-2xl overflow-hidden transition-all duration-200 border ${
               isOpen
-                ? "shadow-md border-[var(--color-leaf)]/20"
-                : "border-transparent"
+                ? "shadow-sm border-[var(--color-leaf)]"
+                : "border-[var(--color-cream-dark)]"
             }`}
           >
             <button

@@ -73,7 +73,7 @@ export default async function LayananPage() {
           </div>
           <h1 className="display-lg text-[#1a1a1a]">
             Ada yang bisa kami{" "}
-            <span className="text-gradient-warm">bantu?</span>
+            <span className="text-[var(--color-turmeric)]">bantu?</span>
           </h1>
           <p className="text-[#555] mt-3 max-w-xl text-lg">
             Temukan jawaban atas pertanyaan umum kamu, atau langsung hubungi
@@ -87,7 +87,7 @@ export default async function LayananPage() {
           {/* FAQ Column */}
           <div className="lg:col-span-2">
             <h2 className="font-bold text-xl text-[#1a1a1a] mb-6 flex items-center gap-2">
-              <span className="w-7 h-7 rounded-lg gradient-leaf flex items-center justify-center text-white">
+              <span className="w-7 h-7 rounded-lg bg-[var(--color-leaf)] flex items-center justify-center text-white">
                 <CircleHelp className="w-4 h-4" strokeWidth={2.5} />
               </span>
               Frequently Asked Questions
@@ -100,14 +100,13 @@ export default async function LayananPage() {
             {/* Direct Contact */}
             <div
               id="contact-card"
-              className="glass-card rounded-3xl p-6 border border-[var(--color-leaf)]/10"
+              className="bg-white shadow-sm rounded-3xl p-6 border border-[var(--color-cream-dark)]"
             >
               <h3 className="font-bold text-[#1a1a1a] mb-2">
                 Pertanyaan lain?
               </h3>
               <p className="text-sm text-[#666] mb-5 leading-relaxed">
-                Tim CS kami siap membantu kamu lewat WhatsApp. Respond cepat
-                selama jam operasional!
+                Tim CS kami siap membantu kamu lewat WhatsApp!
               </p>
               <a
                 href={contactUrl}
@@ -129,7 +128,7 @@ export default async function LayananPage() {
             </div>
 
             {/* Operational Hours */}
-            <div
+            {/* <div
               id="operational-hours-card"
               className="glass-card rounded-3xl p-6 border border-[var(--color-turmeric)]/10"
             >
@@ -159,12 +158,12 @@ export default async function LayananPage() {
                 />
                 <p className="text-xs text-[#666]">{SITE_CONFIG.location}</p>
               </div>
-            </div>
+            </div> */}
 
             {/* Instagram */}
             <div
               id="instagram-card"
-              className="glass-card rounded-3xl p-6 border border-pink-100"
+              className="bg-white shadow-sm rounded-3xl p-6 border border-[var(--color-cream-dark)]"
             >
               <h3 className="font-bold text-[#1a1a1a] mb-2 flex items-center gap-2">
                 <Spotlight className="w-4 h-4 text-pink-500" strokeWidth={2} />{" "}
@@ -178,7 +177,7 @@ export default async function LayananPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 id="instagram-follow-btn"
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-orange-400 text-white font-bold text-sm hover:opacity-90 hover:-translate-y-0.5 transition-all"
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-pink-500 text-white font-bold text-sm hover:bg-pink-600 transition-all"
               >
                 <svg
                   className="w-5 h-5"
@@ -193,9 +192,9 @@ export default async function LayananPage() {
             </div>
 
             {/* Quick Order */}
-            <div className="gradient-leaf rounded-3xl p-6 text-white">
+            <div className="bg-[var(--color-leaf)] rounded-3xl p-6 text-white shadow-sm">
               <h3 className="font-bold mb-2 flex items-center gap-1.5">
-                Sudah siap pesan? <Nut className="w-4 h-4" strokeWidth={2} />
+                Mau order? <Nut className="w-4 h-4" strokeWidth={2} />
               </h3>
               <p className="text-white/80 text-sm mb-4">
                 Langsung order sekarang dan nikmati gado-gado roll segarmu!
