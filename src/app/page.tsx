@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Leaf, Zap, HeartPulse, Camera, LeafyGreen, CircleFadingPlus, Recycle, Nut, Utensils, Tag, Flame, Package, Sprout, Smartphone } from "lucide-react";
-import { PRODUCTS, generateWhatsAppUrl } from "@/data/products";
+import { unstable_noStore as noStore } from "next/cache";
+import { Leaf, Zap, HeartPulse, LeafyGreen, CircleFadingPlus, Recycle, Nut, Utensils, Tag, Flame, Package, Sprout, Smartphone } from "lucide-react";
+import { PRODUCTS, generateWhatsAppUrl, SITE_CONFIG } from "@/data/products";
+import { sdk, GONUTS_PRODUCT_HANDLE, INDONESIA_CURRENCY_CODE } from "@/lib/medusa";
+import { type MedusaProduct, type MedusaRegion } from "@/lib/medusa-types";
 
 export const metadata: Metadata = {
   title: "GoNuts Bites — Wrap-Dip-Enjoy",
@@ -10,9 +13,86 @@ export const metadata: Metadata = {
     "Camilan sehat gado-gado roll yang segar, praktis, dan Instagramable untuk Gen Z Pekanbaru.",
 };
 
-export default function HomePage() {
-  const product = PRODUCTS[0];
-  const quickOrderUrl = generateWhatsAppUrl("Gado-Gado Roll 6 pcs", "Original");
+// ── Tipe data yang diambil dari Medusa untuk halaman beranda ──
+type HomeData = {
+  productTitle: string;
+  minPrice: number;        // harga varian termurah (IDR)
+  sauceCount: number;      // jumlah pilihan saus
+  fromMedusa: boolean;
+};
+
+// ── Ambil data dari Medusa ──
+async function fetchHomeData(): Promise<HomeData> {
+  noStore();
+
+  const fallback: HomeData = {
+    productTitle: PRODUCTS[0]?.name ?? "Gado-Gado Roll",
+    minPrice: 12000,
+    sauceCount: 2,
+    fromMedusa: false,
+  };
+
+  try {
+    // 1. Cari region Indonesia untuk harga IDR
+    const regionsRes = await sdk.store.region.list();
+    const idRegion = (regionsRes.regions as MedusaRegion[]).find(
+      (r) => r.currency_code === INDONESIA_CURRENCY_CODE
+    );
+
+    // 2. Fetch produk dengan harga kalkulasi
+    const params: Record<string, string> = {
+      handle: GONUTS_PRODUCT_HANDLE,
+      fields: "title,*variants,*options,*options.values,+variants.calculated_price",
+    };
+    if (idRegion?.id) params.region_id = idRegion.id;
+    else params.currency_code = INDONESIA_CURRENCY_CODE;
+
+    const productsRes = await sdk.store.product.list(
+      params as Parameters<typeof sdk.store.product.list>[0]
+    );
+    const product = (productsRes.products as unknown as MedusaProduct[])[0];
+
+    if (!product) return fallback;
+
+    // Harga minimum dari semua varian
+    const prices: number[] = product.variants.flatMap((v) => {
+      const calcPrice = (v as unknown as Record<string, unknown>).calculated_price as { calculated_amount?: number } | undefined;
+      if (calcPrice?.calculated_amount) return [calcPrice.calculated_amount];
+      return v.prices?.map((p) => p.amount) ?? [];
+    });
+    const minPrice = prices.length > 0 ? Math.min(...prices) : fallback.minPrice;
+
+    // Jumlah varian saus
+    const sauceOption = product.options.find(
+      (o) => o.title.toLowerCase() === "saus" || o.title.toLowerCase() === "level pedas"
+    );
+    const sauceCount = sauceOption?.values?.length ?? fallback.sauceCount;
+
+    return {
+      productTitle: product.title,
+      minPrice,
+      sauceCount,
+      fromMedusa: true,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[GoNuts/Home] Medusa fetch failed → static fallback. ${msg}`);
+    return fallback;
+  }
+}
+
+// ── Utilitas format harga IDR ──
+function formatPrice(amount: number): string {
+  if (amount >= 1000) return `Rp${(amount / 1000).toFixed(0)}k`;
+  return `Rp${amount}`;
+}
+
+export default async function HomePage() {
+  const { productTitle, minPrice, sauceCount, fromMedusa } = await fetchHomeData();
+
+  const quickOrderUrl = generateWhatsAppUrl(`${productTitle} 6 pcs`, "Original");
+  const formattedMin = formatPrice(minPrice);
+  const formattedMinFull = `Rp${minPrice.toLocaleString("id-ID")}`;
 
   return (
     <>
@@ -97,8 +177,8 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-6 pt-4 animate-fade-up animate-delay-300">
               {[
                 { value: "100%", label: "Bahan Segar" },
-                { value: "2", label: "Varian Saus" },
-                { value: "Rp12k", label: "Mulai dari" },
+                { value: `${sauceCount}`, label: "Varian Saus" },
+                { value: formattedMin, label: "Mulai dari" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="font-black text-2xl text-[var(--color-leaf)]">
@@ -131,13 +211,17 @@ export default function HomePage() {
               <div className="absolute bottom-3 left-3 sm:-bottom-4 sm:-left-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
                 <p className="text-xs text-[#888] font-medium">Mulai dari</p>
                 <p className="font-black text-[var(--color-leaf)] text-base sm:text-lg">
-                  Rp12.000
+                  {formattedMinFull}
                 </p>
               </div>
               <div className="absolute top-3 right-3 sm:-top-4 sm:-right-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
                 <p className="text-xs sm:text-sm font-bold text-[#1a1a1a] flex items-center gap-1">
                   <LeafyGreen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-leaf)]" strokeWidth={2} /> No Pengawet</p>
-                <p className="text-xs text-[#888]">Segar setiap hari</p>
+                <p className="text-xs text-[#888]">
+                  {fromMedusa ? (
+                    <span className="text-[var(--color-leaf)] font-semibold">● Live</span>
+                  ) : "Segar setiap hari"}
+                </p>
               </div>
             </div>
           </div>
@@ -312,7 +396,7 @@ export default function HomePage() {
                 icon: <Tag className="w-6 h-6 text-[var(--color-turmeric)]" strokeWidth={1.75} />,
                 bg: "bg-[var(--color-turmeric)]/10",
                 title: "Harga Terjangkau",
-                desc: "Mulai Rp12.000 saja untuk 4 pcs. Sehat nggak harus mahal!",
+                desc: `Mulai ${formattedMinFull} saja untuk 4 pcs. Sehat nggak harus mahal!`,
               },
               {
                 icon: <Flame className="w-6 h-6 text-orange-500" strokeWidth={1.75} />,

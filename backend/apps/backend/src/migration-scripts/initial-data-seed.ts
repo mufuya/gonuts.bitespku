@@ -87,6 +87,10 @@ export default async function initial_data_seed({
               currency_code: "usd",
               is_default: false,
             },
+            {
+              currency_code: "idr",
+              is_default: false,
+            },
           ],
           default_sales_channel_id: defaultSalesChannel.id,
         },
@@ -108,11 +112,26 @@ export default async function initial_data_seed({
     },
   });
   const region = regionResult[0];
+
+  // Indonesia region for GoNuts Bites
+  const { result: indonesiaRegionResult } = await createRegionsWorkflow(container).run({
+    input: {
+      regions: [
+        {
+          name: "Indonesia",
+          currency_code: "idr",
+          countries: ["id"],
+          payment_providers: ["pp_system_default"],
+        },
+      ],
+    },
+  });
+  const indonesiaRegion = indonesiaRegionResult[0];
   logger.info("Finished seeding regions.");
 
   logger.info("Seeding tax regions...");
   await createTaxRegionsWorkflow(container).run({
-    input: countries.map((country_code) => ({
+    input: [...countries, "id"].map((country_code) => ({
       country_code,
       provider_id: "tp_system",
     })),
@@ -808,6 +827,84 @@ export default async function initial_data_seed({
               ],
             },
           ],
+          sales_channels: [
+            {
+              id: defaultSalesChannel.id,
+            },
+          ],
+        },
+
+        // ── GoNuts Bites: Gado-Gado Roll ──
+        {
+          title: "Gado-Gado Roll",
+          description:
+            "Perpaduan inovatif antara Vietnamese spring roll dan cita rasa gado-gado Indonesia yang autentik. Setiap gigitan menghadirkan kesegaran sayuran rebus berkualitas yang dibungkus rapi dalam rice paper, dinikmati bersama saus kacang spesial kami.",
+          handle: "gado-gado-roll",
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          options: [
+            {
+              title: "Porsi",
+              values: ["4 pcs", "6 pcs"],
+            },
+            {
+              title: "Level Pedas",
+              values: ["Original", "Pedas"],
+            },
+          ],
+          variants: [
+            {
+              title: "4 pcs / Original",
+              sku: "GONUTS-4PCS-ORIGINAL",
+              options: { Porsi: "4 pcs", "Level Pedas": "Original" },
+              prices: [
+                { amount: 12000, currency_code: "idr" },
+                { amount: 12000, region_id: indonesiaRegion.id },
+              ],
+            },
+            {
+              title: "4 pcs / Pedas",
+              sku: "GONUTS-4PCS-PEDAS",
+              options: { Porsi: "4 pcs", "Level Pedas": "Pedas" },
+              prices: [
+                { amount: 12000, currency_code: "idr" },
+                { amount: 12000, region_id: indonesiaRegion.id },
+              ],
+            },
+            {
+              title: "6 pcs / Original",
+              sku: "GONUTS-6PCS-ORIGINAL",
+              options: { Porsi: "6 pcs", "Level Pedas": "Original" },
+              prices: [
+                { amount: 15000, currency_code: "idr" },
+                { amount: 15000, region_id: indonesiaRegion.id },
+              ],
+            },
+            {
+              title: "6 pcs / Pedas",
+              sku: "GONUTS-6PCS-PEDAS",
+              options: { Porsi: "6 pcs", "Level Pedas": "Pedas" },
+              prices: [
+                { amount: 15000, currency_code: "idr" },
+                { amount: 15000, region_id: indonesiaRegion.id },
+              ],
+            },
+          ],
+          metadata: {
+            shortDescription: "Sayuran segar dibungkus rice paper, disajikan dengan saus kacang pilihan.",
+            longDescription: "Perpaduan inovatif antara Vietnamese spring roll dan cita rasa gado-gado Indonesia yang autentik. Setiap gigitan menghadirkan kesegaran sayuran rebus berkualitas yang dibungkus rapi dalam rice paper, dinikmati bersama saus kacang spesial kami.",
+            ingredients: JSON.stringify(["Kacang panjang","Kol","Selada","Tauge","Kentang","Timun","Tahu","Telur","Rice paper"]),
+            packaging: "Paper box ramah lingkungan & mudah didaur ulang",
+            tags: JSON.stringify(["healthy","vegan-friendly","fresh","no-preservatives"]),
+            faq: JSON.stringify([
+              { id: "faq-1", question: "Apakah bahan-bahan GoNuts Bites segar?", answer: "Ya! Kami menggunakan 100% sayuran segar tanpa pengawet yang dibeli langsung dari pasar setiap harinya. Karena itu produk kami sebaiknya dikonsumsi di hari yang sama untuk menjaga kualitas dan kesegaran." },
+              { id: "faq-2", question: "Berapa jam operasional GoNuts Bites?", answer: "Kami buka Senin – Sabtu, pukul 09.00 – 17.00 WIB. Pesanan di luar jam operasional akan diproses pada hari berikutnya." },
+              { id: "faq-3", question: "Bagaimana cara memesan?", answer: "Kamu bisa memesan langsung melalui tombol Pesan Sekarang di halaman produk yang akan mengarahkan kamu ke WhatsApp kami. Pilih porsi (4 pcs atau 6 pcs) dan varian saus (Original/Pedas), lalu konfirmasi pesananmu." },
+              { id: "faq-4", question: "Apakah GoNuts Bites melayani pengiriman?", answer: "Saat ini kami melayani pemesanan dan pengambilan di area Pekanbaru. Untuk pertanyaan pengiriman, silakan hubungi kami melalui WhatsApp." },
+              { id: "faq-5", question: "Apakah ada pilihan untuk alergi tertentu?", answer: "Produk kami mengandung kacang (pada saus) dan telur. Jika kamu memiliki alergi spesifik, silakan informasikan saat memesan melalui WhatsApp agar kami dapat membantu." },
+              { id: "faq-6", question: "Berapa lama produk bisa disimpan?", answer: "GoNuts Bites dibuat segar setiap hari dan sebaiknya dikonsumsi dalam waktu 4–6 jam setelah pembuatan untuk kualitas terbaik. Simpan di tempat sejuk jika belum dikonsumsi." }
+            ]),
+          },
           sales_channels: [
             {
               id: defaultSalesChannel.id,

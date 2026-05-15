@@ -1,8 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock, MapPin, Camera, CircleHelp, Nut, Spotlight, MessageCircle } from "lucide-react";
+import { unstable_noStore as noStore } from "next/cache";
+import {
+  Clock,
+  MapPin,
+  CircleHelp,
+  Nut,
+  Spotlight,
+  MessageCircle,
+} from "lucide-react";
 import { SITE_CONFIG, generateWhatsAppUrl } from "@/data/products";
 import FAQAccordion from "@/components/layanan/FAQAccordion";
+import { sdk, GONUTS_PRODUCT_HANDLE } from "@/lib/medusa";
+import {
+  extractFaqFromProduct,
+  type FaqItem,
+  type MedusaProduct,
+} from "@/lib/medusa-types";
 
 export const metadata: Metadata = {
   title: "Layanan & FAQ",
@@ -10,11 +24,38 @@ export const metadata: Metadata = {
     "Pertanyaan umum seputar GoNuts Bites — kesegaran bahan, jam operasional, cara pesan, dan informasi layanan pelanggan.",
 };
 
-export default function LayananPage() {
+// ---- Fetch FAQ from Medusa product metadata ----
+
+async function fetchFaqItems(): Promise<FaqItem[] | null> {
+  noStore();
+  try {
+    const res = await sdk.store.product.list({
+      handle: GONUTS_PRODUCT_HANDLE,
+      fields: "metadata",
+    } as Parameters<typeof sdk.store.product.list>[0]);
+
+    const medusaProduct = (res.products as unknown as MedusaProduct[])[0];
+    if (!medusaProduct) return null;
+
+    return extractFaqFromProduct(medusaProduct);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[GoNuts] FAQ fetch FAILED → using static fallback. Reason: ${msg}`);
+    return null;
+  }
+}
+
+
+// ---- Page ----
+
+export default async function LayananPage() {
   const contactUrl = `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodeURIComponent(
     "Halo GoNuts Bites, saya memiliki pertanyaan mengenai produk/layanan kalian."
   )}`;
   const orderUrl = generateWhatsAppUrl("Gado-Gado Roll", "Original");
+
+  // Fetch FAQ from Medusa (will fallback inside FAQAccordion if null)
+  const dynamicFaqItems = await fetchFaqItems();
 
   return (
     <div className="min-h-screen bg-[var(--color-cream)] pt-24">
@@ -22,8 +63,13 @@ export default function LayananPage() {
       <div className="bg-white border-b border-[var(--color-cream-dark)]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-turmeric)]/10 border border-[var(--color-turmeric)]/20 mb-4">
-            <MessageCircle className="w-4 h-4 text-[var(--color-turmeric)]" strokeWidth={2} />
-            <span className="text-sm font-semibold text-[var(--color-turmeric)]">Layanan Konsumen</span>
+            <MessageCircle
+              className="w-4 h-4 text-[var(--color-turmeric)]"
+              strokeWidth={2}
+            />
+            <span className="text-sm font-semibold text-[var(--color-turmeric)]">
+              Layanan Konsumen
+            </span>
           </div>
           <h1 className="display-lg text-[#1a1a1a]">
             Ada yang bisa kami{" "}
@@ -46,7 +92,7 @@ export default function LayananPage() {
               </span>
               Frequently Asked Questions
             </h2>
-            <FAQAccordion />
+            <FAQAccordion faqItems={dynamicFaqItems ?? undefined} />
           </div>
 
           {/* Contact Card Column */}
@@ -88,7 +134,11 @@ export default function LayananPage() {
               className="glass-card rounded-3xl p-6 border border-[var(--color-turmeric)]/10"
             >
               <h3 className="font-bold text-[#1a1a1a] mb-4 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[var(--color-turmeric)]" strokeWidth={2} /> Jam Operasional
+                <Clock
+                  className="w-4 h-4 text-[var(--color-turmeric)]"
+                  strokeWidth={2}
+                />{" "}
+                Jam Operasional
               </h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center py-2 border-b border-[var(--color-cream-dark)]">
@@ -103,7 +153,10 @@ export default function LayananPage() {
                 </div>
               </div>
               <div className="mt-3 flex items-center gap-2 p-2.5 bg-[var(--color-cream)] rounded-xl">
-                <MapPin className="w-4 h-4 text-[var(--color-leaf)] flex-shrink-0" strokeWidth={2} />
+                <MapPin
+                  className="w-4 h-4 text-[var(--color-leaf)] flex-shrink-0"
+                  strokeWidth={2}
+                />
                 <p className="text-xs text-[#666]">{SITE_CONFIG.location}</p>
               </div>
             </div>
@@ -114,7 +167,8 @@ export default function LayananPage() {
               className="glass-card rounded-3xl p-6 border border-pink-100"
             >
               <h3 className="font-bold text-[#1a1a1a] mb-2 flex items-center gap-2">
-                <Spotlight className="w-4 h-4 text-pink-500" strokeWidth={2} /> Follow Kami
+                <Spotlight className="w-4 h-4 text-pink-500" strokeWidth={2} />{" "}
+                Follow Kami
               </h3>
               <p className="text-sm text-[#666] mb-4">
                 Update produk, promo, dan konten sehat ada di Instagram kami!
@@ -140,7 +194,9 @@ export default function LayananPage() {
 
             {/* Quick Order */}
             <div className="gradient-leaf rounded-3xl p-6 text-white">
-              <h3 className="font-bold mb-2 flex items-center gap-1.5">Sudah siap pesan? <Nut className="w-4 h-4" strokeWidth={2} /></h3>
+              <h3 className="font-bold mb-2 flex items-center gap-1.5">
+                Sudah siap pesan? <Nut className="w-4 h-4" strokeWidth={2} />
+              </h3>
               <p className="text-white/80 text-sm mb-4">
                 Langsung order sekarang dan nikmati gado-gado roll segarmu!
               </p>
