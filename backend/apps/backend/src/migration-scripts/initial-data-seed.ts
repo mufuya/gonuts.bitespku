@@ -859,7 +859,6 @@ export default async function initial_data_seed({
               options: { Porsi: "4 pcs", "Level Pedas": "Original" },
               prices: [
                 { amount: 12000, currency_code: "idr" },
-                { amount: 12000, region_id: indonesiaRegion.id },
               ],
             },
             {
@@ -868,7 +867,6 @@ export default async function initial_data_seed({
               options: { Porsi: "4 pcs", "Level Pedas": "Pedas" },
               prices: [
                 { amount: 12000, currency_code: "idr" },
-                { amount: 12000, region_id: indonesiaRegion.id },
               ],
             },
             {
@@ -877,7 +875,6 @@ export default async function initial_data_seed({
               options: { Porsi: "6 pcs", "Level Pedas": "Original" },
               prices: [
                 { amount: 15000, currency_code: "idr" },
-                { amount: 15000, region_id: indonesiaRegion.id },
               ],
             },
             {
@@ -886,7 +883,6 @@ export default async function initial_data_seed({
               options: { Porsi: "6 pcs", "Level Pedas": "Pedas" },
               prices: [
                 { amount: 15000, currency_code: "idr" },
-                { amount: 15000, region_id: indonesiaRegion.id },
               ],
             },
           ],
