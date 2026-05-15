@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# ── Backend (MedusaJS) ────────────────────────────────────────────────────────
+backend/node_modules
+backend/apps/backend/node_modules
+backend/apps/backend/.cache
+backend/apps/backend/dist
+backend/.turbo
