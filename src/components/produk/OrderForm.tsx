@@ -6,18 +6,13 @@ import {
   SAUCE_VARIANTS,
   PORTION_VARIANTS,
   SITE_CONFIG,
+  type Product,
 } from "@/data/products";
-import { sdk } from "@/lib/medusa";
-import {
-  findVariantId,
-  type MappedProduct,
-} from "@/lib/medusa-types";
 
 // ---- Props ----
 
 interface OrderFormProps {
-  product?: MappedProduct;
-  regionId?: string | null;
+  product: Product;
 }
 
 // ---- WhatsApp message builder ----
@@ -26,92 +21,43 @@ function buildWhatsAppMessage(
   productName: string,
   portionLabel: string,
   sauceLabel: string,
-  priceFormatted: string,
-  cartId?: string
+  priceFormatted: string
 ): string {
-  const refLine = cartId
-    ? `\n🆔 Ref: CART-${cartId.slice(-8).toUpperCase()}`
-    : "";
   return (
     `Halo GoNuts Bites! 🌿\n\n` +
     `Saya ingin memesan:\n` +
     `📦 ${productName} ${portionLabel}\n` +
     `🥜 Saus: ${sauceLabel}\n` +
-    `💰 Total: ${priceFormatted}` +
-    refLine
+    `💰 Total: ${priceFormatted}`
   );
 }
 
 // ---- Component ----
 
-export default function OrderForm({ product, regionId }: OrderFormProps) {
-  // Derive portion & sauce arrays from product prop or fallback to statics
-  const portionVariants = product?.portionVariants ?? PORTION_VARIANTS.map((p) => ({ ...p, medusaVariantId: "" }));
-  const sauceVariants = product?.sauceVariants ?? SAUCE_VARIANTS;
+export default function OrderForm({ product }: OrderFormProps) {
+  const portionVariants = PORTION_VARIANTS;
+  const sauceVariants = product.sauceVariants ?? SAUCE_VARIANTS;
 
   const [selectedPortion, setSelectedPortion] = useState(portionVariants[0]);
   const [selectedSauce, setSelectedSauce] = useState(sauceVariants[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const productName = product?.name ?? "Gado-Gado Roll";
+  const productName = product.name;
 
   const handleOrder = useCallback(async () => {
     setIsSubmitting(true);
-    setError(null);
 
-    let cartId: string | undefined;
-
-    try {
-      // ── Step 1: Temukan Medusa variant ID ──
-      const variantId = product?.allMedusaVariants?.length && product?.medusaOptions
-        ? findVariantId(
-          product.allMedusaVariants,
-          product.medusaOptions,
-          selectedPortion.label,
-          selectedSauce.label
-        )
-        : null;
-
-      // ── Step 2: Buat Cart di Medusa ──
-      const cartPayload: Record<string, unknown> = {};
-      if (regionId) cartPayload.region_id = regionId;
-
-      const { cart } = await (sdk.store.cart as any).create(cartPayload);
-      cartId = cart.id as string;
-
-      // Simpan ke localStorage untuk session tracking
-      if (typeof window !== "undefined") {
-        localStorage.setItem("gonuts_cart_id", cartId);
-      }
-
-      // ── Step 3: Tambah line item jika variant ID tersedia ──
-      if (variantId && cartId) {
-        await (sdk.store.cart as any).lineItems.create(cartId, {
-          variant_id: variantId,
-          quantity: 1,
-        });
-      }
-    } catch (err) {
-      // Cart gagal dibuat — tetap lanjutkan ke WhatsApp (graceful degradation)
-      if (process.env.NODE_ENV === "development") {
-        console.warn("[GoNuts] Cart creation failed, proceeding without cart:", err);
-      }
-    }
-
-    // ── Step 4: Redirect ke WhatsApp ──
     const message = buildWhatsAppMessage(
       productName,
       selectedPortion.label,
       selectedSauce.label,
-      selectedPortion.priceFormatted,
-      cartId
+      selectedPortion.priceFormatted
     );
     const waUrl = `https://wa.me/${SITE_CONFIG.whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(waUrl, "_blank", "noopener,noreferrer");
 
     setIsSubmitting(false);
-  }, [selectedPortion, selectedSauce, product, regionId, productName, portionVariants, sauceVariants]);
+  }, [selectedPortion, selectedSauce, productName]);
 
   return (
     <div
@@ -141,22 +87,25 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
                 key={portion.id}
                 id={`portion-option-${portion.id}`}
                 onClick={() => setSelectedPortion(portion)}
-                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${isSelected
-                  ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
-                  : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
-                  }`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
+                    : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
+                }`}
               >
                 <p
-                  className={`font-bold text-lg ${isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
-                    }`}
+                  className={`font-bold text-lg ${
+                    isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
+                  }`}
                 >
                   {portion.label}
                 </p>
                 <p
-                  className={`text-sm font-semibold mt-0.5 ${isSelected
-                    ? "text-[var(--color-turmeric)]"
-                    : "text-[#666]"
-                    }`}
+                  className={`text-sm font-semibold mt-0.5 ${
+                    isSelected
+                      ? "text-[var(--color-turmeric)]"
+                      : "text-[#666]"
+                  }`}
                 >
                   {portion.priceFormatted}
                 </p>
@@ -179,14 +128,16 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
                 key={sauce.id}
                 id={`sauce-option-${sauce.id}`}
                 onClick={() => setSelectedSauce(sauce)}
-                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${isSelected
-                  ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
-                  : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
-                  }`}
+                className={`rounded-2xl border-2 p-4 text-left transition-all duration-200 cursor-pointer ${
+                  isSelected
+                    ? "border-[var(--color-leaf)] bg-[var(--color-leaf)]/5 shadow-sm"
+                    : "border-[var(--color-cream-dark)] hover:border-[var(--color-leaf)]/40 bg-white/50"
+                }`}
               >
                 <p
-                  className={`font-bold text-sm mt-1 ${isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
-                    }`}
+                  className={`font-bold text-sm mt-1 ${
+                    isSelected ? "text-[var(--color-leaf)]" : "text-[#1a1a1a]"
+                  }`}
                 >
                   {sauce.label}
                 </p>
@@ -214,24 +165,17 @@ export default function OrderForm({ product, regionId }: OrderFormProps) {
         </p>
       </div>
 
-      {/* Error message */}
-      {error && (
-        <div className="glass-card rounded-xl px-4 py-3 border border-red-200 bg-red-50/80">
-          <p className="text-xs text-red-600 font-medium">{error}</p>
-        </div>
-      )}
-
       {/* CTA Button */}
       <button
         onClick={handleOrder}
         disabled={isSubmitting}
         id="order-whatsapp-cta"
-        className={`btn-primary btn-whatsapp w-full text-base py-4 relative overflow-hidden ${isSubmitting ? "opacity-80 cursor-not-allowed" : ""
-          }`}
+        className={`btn-primary btn-whatsapp w-full text-base py-4 relative overflow-hidden ${
+          isSubmitting ? "opacity-80 cursor-not-allowed" : ""
+        }`}
       >
         {isSubmitting ? (
           <>
-            {/* Loading spinner */}
             <svg
               className="w-5 h-5 animate-spin"
               fill="none"
