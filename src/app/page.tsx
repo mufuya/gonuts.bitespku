@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Leaf, Zap, HeartPulse, Camera, LeafyGreen, CircleFadingPlus, Recycle, Nut, Utensils, Tag, Flame, Package, Sprout, Smartphone } from "lucide-react";
-import { PRODUCTS, generateWhatsAppUrl } from "@/data/products";
+import { unstable_noStore as noStore } from "next/cache";
+import { Leaf, Zap, HeartPulse, LeafyGreen, CircleFadingPlus, Recycle, Nut, Utensils, Tag, Flame, Package, Sprout, Smartphone } from "lucide-react";
+import { PRODUCTS, generateWhatsAppUrl, SITE_CONFIG } from "@/data/products";
+import { sdk, GONUTS_PRODUCT_HANDLE, INDONESIA_CURRENCY_CODE } from "@/lib/medusa";
+import { type MedusaProduct, type MedusaRegion } from "@/lib/medusa-types";
 
 export const metadata: Metadata = {
   title: "GoNuts Bites — Wrap-Dip-Enjoy",
@@ -10,9 +13,94 @@ export const metadata: Metadata = {
     "Camilan sehat gado-gado roll yang segar, praktis, dan Instagramable untuk Gen Z Pekanbaru.",
 };
 
-export default function HomePage() {
-  const product = PRODUCTS[0];
-  const quickOrderUrl = generateWhatsAppUrl("Gado-Gado Roll 6 pcs", "Original");
+// ── Tipe data yang diambil dari Medusa untuk halaman beranda ──
+type HomeData = {
+  productTitle: string;
+  minPrice: number;        // harga varian termurah (IDR)
+  sauceCount: number;      // jumlah pilihan saus
+  heroImage: string;       // images[0] dari Medusa → hero section
+  brandImage: string;      // images[1] dari Medusa → brand story section
+  fromMedusa: boolean;
+};
+
+// ── Ambil data dari Medusa ──
+async function fetchHomeData(): Promise<HomeData> {
+  noStore();
+
+  const fallback: HomeData = {
+    productTitle: PRODUCTS[0]?.name ?? "Gado-Gado Roll",
+    minPrice: 12000,
+    sauceCount: 2,
+    heroImage: "/hero-product-3.png",
+    brandImage: "/hero-product-4.png",
+    fromMedusa: false,
+  };
+
+  try {
+    // 1. Cari region Indonesia untuk harga IDR
+    const regionsRes = await sdk.store.region.list();
+    const idRegion = (regionsRes.regions as MedusaRegion[]).find(
+      (r) => r.currency_code === INDONESIA_CURRENCY_CODE
+    );
+
+    // 2. Fetch produk dengan harga kalkulasi
+    const params: Record<string, string> = {
+      handle: GONUTS_PRODUCT_HANDLE,
+      fields: "title,*images,*variants,*options,*options.values,+variants.calculated_price",
+    };
+    if (idRegion?.id) params.region_id = idRegion.id;
+    else params.currency_code = INDONESIA_CURRENCY_CODE;
+
+    const productsRes = await sdk.store.product.list(
+      params as Parameters<typeof sdk.store.product.list>[0]
+    );
+    const product = (productsRes.products as unknown as MedusaProduct[])[0];
+
+    if (!product) return fallback;
+
+    // Harga minimum dari semua varian
+    const prices: number[] = product.variants.flatMap((v) => {
+      const calcPrice = (v as unknown as Record<string, unknown>).calculated_price as { calculated_amount?: number } | undefined;
+      if (calcPrice?.calculated_amount) return [calcPrice.calculated_amount];
+      return v.prices?.map((p) => p.amount) ?? [];
+    });
+    const minPrice = prices.length > 0 ? Math.min(...prices) : fallback.minPrice;
+
+    // Jumlah varian saus
+    const sauceOption = product.options.find(
+      (o) => o.title.toLowerCase() === "saus" || o.title.toLowerCase() === "level pedas"
+    );
+    const sauceCount = sauceOption?.values?.length ?? fallback.sauceCount;
+
+    const images = (product as unknown as { images?: { url: string }[] }).images ?? [];
+
+    return {
+      productTitle: product.title,
+      minPrice,
+      sauceCount,
+      heroImage: images[0]?.url || fallback.heroImage,
+      brandImage: images[1]?.url || fallback.brandImage,
+      fromMedusa: true,
+    };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[GoNuts/Home] Medusa fetch failed → static fallback. ${msg}`);
+    return fallback;
+  }
+}
+
+// ── Utilitas format harga IDR ──
+function formatPrice(amount: number): string {
+  if (amount >= 1000) return `Rp${(amount / 1000).toFixed(0)}k`;
+  return `Rp${amount}`;
+}
+
+export default async function HomePage() {
+  const { productTitle, minPrice, sauceCount, heroImage, brandImage, fromMedusa } = await fetchHomeData();
+
+  const quickOrderUrl = generateWhatsAppUrl(`${productTitle} 6 pcs`, "Original");
+  const formattedMin = formatPrice(minPrice);
+  const formattedMinFull = `Rp${minPrice.toLocaleString("id-ID")}`;
 
   return (
     <>
@@ -21,28 +109,14 @@ export default function HomePage() {
           ============================================= */}
       <section
         id="hero-section"
-        className="relative min-h-screen flex items-center gradient-hero overflow-hidden pt-20"
+        className="relative min-h-screen flex items-center bg-[var(--color-cream)] pt-20"
       >
-        {/* Decorative blobs */}
-        <div
-          className="blob absolute top-1/4 -left-24 w-72 h-72 bg-[var(--color-leaf)]"
-          aria-hidden="true"
-        />
-        <div
-          className="blob blob-delay-1 absolute bottom-1/4 -right-24 w-80 h-80 bg-[var(--color-turmeric)]"
-          aria-hidden="true"
-        />
-        <div
-          className="blob blob-delay-2 absolute top-3/4 left-1/3 w-56 h-56 bg-[var(--color-leaf-light)]"
-          aria-hidden="true"
-        />
 
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-16 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Text Content */}
-          <div className="space-y-6 animate-fade-up">
+          <div className="space-y-6">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-leaf)]/10 border border-[var(--color-leaf)]/20">
-              <span className="w-2 h-2 rounded-full bg-[var(--color-leaf)] animate-pulse" />
               <span className="text-sm font-semibold text-[var(--color-leaf)]">
                 Healthy Veggie Snack
               </span>
@@ -50,23 +124,23 @@ export default function HomePage() {
 
             {/* Headline */}
             <h1 className="display-xl text-[#1a1a1a]">
-              <span className="text-gradient-leaf">Wrap.</span>
+              <span className="text-[var(--color-leaf)]">Wrap.</span>
               <br />
-              <span className="text-gradient-warm">Dip.</span>
+              <span className="text-[var(--color-turmeric)]">Dip.</span>
               <br />
               Enjoy.
             </h1>
 
-            <p className="text-lg text-[#555] max-w-md leading-relaxed animate-fade-up animate-delay-100">
-              GoNuts Bites menghadirkan inovasi camilan sehat — perpaduan
+            <p className="text-lg text-[#555] max-w-md leading-relaxed">
+              GoNuts Bites menghadirkan inovasi camilan sehat dengan perpaduan
               <strong className="text-[#1a1a1a]"> Vietnamese spring roll </strong>
-              dengan cita rasa
+              dan
               <strong className="text-[#1a1a1a]"> gado-gado khas Indonesia</strong>.
               Segar, praktis, dan pastinya Instagramable!
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-wrap gap-3 pt-2 animate-fade-up animate-delay-200">
+            <div className="flex flex-wrap gap-3 pt-2">
               <a
                 href={quickOrderUrl}
                 target="_blank"
@@ -94,11 +168,11 @@ export default function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="flex flex-wrap gap-6 pt-4 animate-fade-up animate-delay-300">
+            <div className="flex flex-wrap gap-6 pt-4">
               {[
                 { value: "100%", label: "Bahan Segar" },
-                { value: "2", label: "Varian Saus" },
-                { value: "Rp12k", label: "Mulai dari" },
+                { value: `${sauceCount}`, label: "Varian Saus" },
+                { value: formattedMin, label: "Mulai dari" },
               ].map((stat) => (
                 <div key={stat.label} className="text-center">
                   <p className="font-black text-2xl text-[var(--color-leaf)]">
@@ -111,56 +185,22 @@ export default function HomePage() {
           </div>
 
           {/* Hero Image */}
-          <div className="relative flex items-center justify-center animate-fade-up animate-delay-200">
-            {/* Decorative circle behind image */}
-            <div className="absolute w-80 h-80 sm:w-96 sm:h-96 rounded-full bg-[var(--color-leaf)]/8 blur-2xl" />
+          <div className="relative flex items-center justify-center">
+            {/* Simple image container without floating elements */}
             <div className="relative w-full max-w-lg aspect-square">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-[var(--color-leaf)]/10 to-[var(--color-turmeric)]/10 blur-xl scale-90" />
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-[var(--color-leaf)]/15 border border-white/60">
+              <div className="relative rounded-3xl overflow-hidden shadow-lg border border-[var(--color-cream-dark)] h-full w-full">
                 <Image
-                  src="/hero-product-3.png"
+                  src={heroImage}
                   alt="Gado-Gado Roll GoNuts Bites — fresh veggie spring roll dengan saus kacang"
                   width={600}
                   height={600}
                   priority
+                  unoptimized={heroImage.startsWith("http")}
                   className="object-cover w-full h-full"
                 />
               </div>
-
-              {/* Floating tag cards — inside image on mobile, overhanging on sm+ */}
-              <div className="absolute bottom-3 left-3 sm:-bottom-4 sm:-left-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
-                <p className="text-xs text-[#888] font-medium">Mulai dari</p>
-                <p className="font-black text-[var(--color-leaf)] text-base sm:text-lg">
-                  Rp12.000
-                </p>
-              </div>
-              <div className="absolute top-3 right-3 sm:-top-4 sm:-right-4 glass-card rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-lg">
-                <p className="text-xs sm:text-sm font-bold text-[#1a1a1a] flex items-center gap-1">
-                  <LeafyGreen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-leaf)]" strokeWidth={2} /> No Pengawet</p>
-                <p className="text-xs text-[#888]">Segar setiap hari</p>
-              </div>
             </div>
           </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <p className="text-xs text-[#aaa] font-medium tracking-widest uppercase">
-            Scroll
-          </p>
-          <svg
-            className="w-4 h-4 text-[#aaa]"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
         </div>
       </section>
 
@@ -175,27 +215,16 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
             {/* Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="absolute -top-6 -left-6 w-36 h-36 rounded-full bg-[var(--color-leaf)]/8" />
-              <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full bg-[var(--color-turmeric)]/12" />
-              <div className="relative rounded-3xl overflow-hidden shadow-xl border border-[var(--color-cream-dark)]">
+              <div className="relative rounded-3xl overflow-hidden shadow-sm border border-[var(--color-cream-dark)]">
                 <Image
-                  src="/hero-product-4.png"
+                  src={brandImage}
                   alt="Bahan-bahan segar GoNuts Bites — kacang panjang, kol, tauge, timun, tahu"
                   width={600}
                   height={500}
                   loading="eager"
+                  unoptimized={brandImage.startsWith("http")}
                   className="object-cover w-full"
                 />
-              </div>
-              {/* Eco badge */}
-              <div className="absolute bottom-6 right-6 glass-card rounded-2xl px-4 py-3 text-center shadow-lg">
-                <div className="flex justify-center mb-1">
-                  <Recycle className="w-6 h-6 text-[var(--color-leaf)]" strokeWidth={1.75} />
-                </div>
-                <p className="text-xs font-bold text-[#1a1a1a]">
-                  Eco Packaging
-                </p>
-                <p className="text-xs text-[#888]">Paper box</p>
               </div>
             </div>
 
@@ -215,8 +244,7 @@ export default function HomePage() {
               <p className="text-[#555] leading-relaxed">
                 GoNuts Bites lahir dari keresahan: kenapa camilan sehat susah
                 banget dikonsumsi dengan praktis? Kami menggabungkan konsep
-                <strong className="text-[#1a1a1a]"> Vietnamese spring roll</strong> —
-                yang ringan dan fresh — dengan cita rasa
+                <strong className="text-[#1a1a1a]"> Vietnamese spring roll</strong> yang ringan dan fresh dengan cita rasa
                 <strong className="text-[#1a1a1a]"> gado-gado khas Indonesia</strong> yang sudah dicintai jutaan orang.
               </p>
 
@@ -225,8 +253,7 @@ export default function HomePage() {
                 <em className="text-[var(--color-leaf)] font-semibold">
                   one-bite
                 </em> yang segar,
-                bergizi, dan cocok dinikmati kapan saja — sambil
-                kuliah, kerja, atau nongkrong bareng teman. Dikemas dalam <strong className="text-[#1a1a1a]">paper box ramah lingkungan</strong>.
+                bergizi, dan cocok dinikmati kapan saja. Dikemas dalam <strong className="text-[#1a1a1a]">paper box ramah lingkungan</strong>.
               </p>
 
               {/* Values */}
@@ -285,7 +312,7 @@ export default function HomePage() {
       {/* =============================================
           WHY GONUTS SECTION
           ============================================= */}
-      <section id="why-gonuts-section" className="py-20 gradient-hero">
+      {/* <section id="why-gonuts-section" className="py-20 bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/60 border border-[var(--color-leaf)]/20 mb-4">
             <span className="text-sm font-semibold text-[var(--color-leaf)]">
@@ -312,7 +339,7 @@ export default function HomePage() {
                 icon: <Tag className="w-6 h-6 text-[var(--color-turmeric)]" strokeWidth={1.75} />,
                 bg: "bg-[var(--color-turmeric)]/10",
                 title: "Harga Terjangkau",
-                desc: "Mulai Rp12.000 saja untuk 4 pcs. Sehat nggak harus mahal!",
+                desc: `Mulai ${formattedMinFull} saja untuk 4 pcs. Sehat nggak harus mahal!`,
               },
               {
                 icon: <Flame className="w-6 h-6 text-orange-500" strokeWidth={1.75} />,
@@ -341,7 +368,7 @@ export default function HomePage() {
             ].map((item) => (
               <div
                 key={item.title}
-                className="glass-card rounded-3xl p-6 text-left hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                className="bg-white border border-[var(--color-cream-dark)] rounded-3xl p-6 text-left shadow-sm"
               >
                 <div className={`w-11 h-11 rounded-2xl ${item.bg} flex items-center justify-center mb-4`}>
                   {item.icon}
@@ -352,23 +379,15 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* =============================================
           CTA BANNER
           ============================================= */}
-      <section
+      {/* <section
         id="cta-banner"
-        className="py-16 gradient-leaf relative overflow-hidden"
+        className="py-16 bg-[var(--color-leaf)] relative overflow-hidden"
       >
-        <div
-          className="blob absolute -top-12 -right-12 w-64 h-64 bg-white opacity-5"
-          aria-hidden="true"
-        />
-        <div
-          className="blob blob-delay-1 absolute -bottom-8 -left-8 w-48 h-48 bg-white opacity-5"
-          aria-hidden="true"
-        />
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center relative">
           <h2 className="display-md text-white mb-4 flex items-center justify-center gap-2">
             Siap Wrap-Dip-Enjoy? <Nut className="w-8 h-8 opacity-90" strokeWidth={1.75} />
@@ -404,7 +423,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
-      </section>
+      </section> */}
     </>
   );
 }
