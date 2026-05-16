@@ -1,20 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { FaqItem } from "@/lib/medusa-types";
 import { FAQ_ITEMS } from "@/data/products";
 
-interface FAQAccordionProps {
-  faqItems?: FaqItem[];
-}
-
-export default function FAQAccordion({ faqItems }: FAQAccordionProps) {
-  const items = faqItems && faqItems.length > 0 ? faqItems : FAQ_ITEMS;
-  const [openId, setOpenId] = useState<string | null>(items[0]?.id ?? null);
+export default function FAQAccordion() {
+  const [openId, setOpenId] = useState<string | null>(FAQ_ITEMS[0]?.id ?? null);
 
   return (
     <div className="space-y-3" id="faq-accordion">
-      {items.map((item) => {
+      {FAQ_ITEMS.map((item) => {
         const isOpen = openId === item.id;
         return (
           <div
