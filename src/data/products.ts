@@ -103,7 +103,7 @@ export const PRODUCTS: Product[] = [
     sauceVariants: SAUCE_VARIANTS,
     tags: ["healthy", "vegan-friendly", "fresh", "no-preservatives"],
     isAvailable: true,
-    image: "/hero-product-4.png",
+    image: "/gambar1.jpeg",
   },
 ];
 
@@ -113,12 +113,6 @@ export const FAQ_ITEMS = [
     question: "Apakah bahan-bahan GoNuts Bites segar?",
     answer:
       "Ya! Kami menggunakan 100% sayuran segar tanpa pengawet yang dibeli langsung dari pasar setiap harinya. Karena itu produk kami sebaiknya dikonsumsi di hari yang sama untuk menjaga kualitas dan kesegaran.",
-  },
-  {
-    id: "faq-2",
-    question: "Berapa jam operasional GoNuts Bites?",
-    answer:
-      "Kami buka Senin – Sabtu, pukul 09.00 – 17.00 WIB. Pesanan di luar jam operasional akan diproses pada hari berikutnya.",
   },
   {
     id: "faq-3",

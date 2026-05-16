@@ -15,7 +15,7 @@ export default function HomePage() {
   const minPortion = PORTION_VARIANTS[0];
 
   const heroImage = product.image;
-  const brandImage = "/hero-product-3.png";
+
 
   const quickOrderUrl = generateWhatsAppUrl(`${product.name} ${minPortion.label}`, "Original");
 
@@ -127,16 +127,18 @@ export default function HomePage() {
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-            {/* Image */}
+            {/* Promo Video */}
             <div className="relative order-2 lg:order-1">
               <div className="relative rounded-3xl overflow-hidden shadow-sm border border-[var(--color-cream-dark)]">
-                <Image
-                  src={brandImage}
-                  alt="Bahan-bahan segar GoNuts Bites — kacang panjang, kol, tauge, timun, tahu"
-                  width={600}
-                  height={500}
-                  loading="eager"
-                  className="object-cover w-full"
+                <video
+                  src="/video promosi.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  aria-label="Video proses pembuatan GoNuts Bites — dari bahan segar ke produk jadi"
+                  style={{ aspectRatio: "9/16" }}
+                  className="object-cover w-full h-full"
                 />
               </div>
             </div>
