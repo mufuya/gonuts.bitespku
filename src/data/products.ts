@@ -71,9 +71,9 @@ export const PORTION_VARIANTS: PortionVariant[] = [
     priceFormatted: "Rp12.000",
   },
   {
-    id: "6pcs",
-    label: "6 pcs",
-    pcs: 6,
+    id: "7pcs",
+    label: "7 pcs",
+    pcs: 7,
     price: 15000,
     priceFormatted: "Rp15.000",
   },
